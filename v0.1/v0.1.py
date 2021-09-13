@@ -13,8 +13,14 @@ BACKGROUND_COLOR = "#001B2B"
 BUTTON_BACKGROUND_COLOR = "#0E3D8B"
 BUTTON_FOREGROUND_COLOR = "#2B8EE2"
 
+BUTTON_HOVER_BACKGROUND_COLOR = "#2B8EE2"
+BUTTON_HOVER_FOREGROUND_COLOR = "#0E3D8B"
+
 STATUS_FOREGROUND_COLOR = "#FFFFFE"
 STATUS_BACKGROUND_COLOR = "#001B2B"
+
+BUTTON_ACTIVE_BACKGROUND_COLOR = "#9400d3"
+BUTTON_ACTIVE_FOREGROUND_COLOR = BUTTON_FOREGROUND_COLOR
 
 BUTTON_BORDER_WIDTH = 0
 
@@ -27,8 +33,8 @@ BACKGROUND -> #134b72, #848c8c, #4a62d9, #001B2B
 class MusicPlayer:
     def __init__(self, window):
         # Setting up the tkinter window
-        window.geometry('420x120')
-        window.title('Leaf Player')
+        window.geometry('420x120+150+150')
+        window.title('Leaf Player v.0.1')
         window.resizable(0, 0)
         window.config(bg=BACKGROUND_COLOR)
         self.window = window
@@ -50,19 +56,31 @@ class MusicPlayer:
         self.audioFileTitle = ""
 
         # Setting up Buttons
-        Load = Button(window, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_FOREGROUND_COLOR, text='Load', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.load)
-        Pause = Button(window, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_FOREGROUND_COLOR, text='Pause/Play', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.pause)
-        Stop = Button(window, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_FOREGROUND_COLOR, text='Stop', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.stop)
+        Load = Button(window, name='load', relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Load', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.load)
+        Pause = Button(window, name='pause', relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Pause/Play', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.pause)
+        Stop = Button(window, name='stop', relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Stop', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.stop)
 
         # Quit Button
-        Button(window, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_FOREGROUND_COLOR, text='Quit', width=34, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=lambda:self.window.quit() if messagebox.askyesno("Quit to Windows", "Do you want to exit?") else "").place(x=42, y=56)
+        Quit = Button(window, name='quit', relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Quit', width=34, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=lambda:self.window.quit() if messagebox.askyesno("Quit to Windows", "Do you want to exit?") else "")
+
+        # Event Bindings
+        Load.bind('<Enter>',self.hoverL)
+        Load.bind('<Leave>',self.hoverL)
+        Pause.bind('<Enter>',self.hoverP)
+        Pause.bind('<Leave>',self.hoverP)
+        Stop.bind('<Enter>',self.hoverS)
+        Stop.bind('<Leave>',self.hoverS)
+        Quit.bind('<Enter>', self.hoverQ)
+        Quit.bind('<Leave>', self.hoverQ)
+
 
         # Placing the buttons
         Load.place(x=30, y=24)
         Pause.place(x=156, y=24)
         Stop.place(x=276, y=24)
+        Quit.place(x=42, y=56)
         # Setting up Buttons for global use across the Class
-        self.Load, self.Pause, self.Stop = Load, Pause, Stop
+        self.Load, self.Pause, self.Stop, self.Quit = Load, Pause, Stop, Quit
 
         # Setting up Status Label
         self.StatusLabel = Label(window, text=self.defaultStatus, bg=STATUS_BACKGROUND_COLOR, fg=STATUS_FOREGROUND_COLOR, font=('Helvetica', 12, 'italic'), anchor=W)
@@ -70,6 +88,27 @@ class MusicPlayer:
 
         # Deciding the state of buttons
         self.decideButtonState()
+        # self.hoverOnButtons()
+
+    def hoverL(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Load['state'] != "disabled": self.Load['bg'],  self.Load['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Load['bg'], self.Load['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+
+    def hoverP(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Pause['state'] != "disabled": self.Pause['bg'],  self.Pause['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Pause['bg'], self.Pause['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+
+    def hoverS(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Stop['state'] != "disabled": self.Stop['bg'],  self.Stop['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Stop['bg'], self.Stop['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+
+    def hoverQ(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Quit['state'] != "disabled": self.Quit['bg'],  self.Quit['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Quit['bg'], self.Quit['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
 
     def load(self):
         self.musicFile = filedialog.askopenfilename(filetypes=[("Audio file (.MP3/ .OGG/ .WAV)", ".mp3 .ogg .wav"), ("All files", "*")])
@@ -136,6 +175,7 @@ class MusicPlayer:
     def stop(self):
         # Stopping the mixer
         mixer.music.stop()
+        self.window.title(self.audioFileTitle+" (Stopped)")
         if mixer.music.get_pos()//1000 == -1:
             # Changin the playing state var
             self.playingState = False
