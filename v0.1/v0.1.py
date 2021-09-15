@@ -8,21 +8,37 @@ from pygame import mixer
 from mutagen import mp3 as mp
 
 
+
 BACKGROUND_COLOR = "#001B2B"
 
+# Button background & foreground color
 BUTTON_BACKGROUND_COLOR = "#0E3D8B"
 BUTTON_FOREGROUND_COLOR = "#2B8EE2"
 
+# Button hover background & foreground color
 BUTTON_HOVER_BACKGROUND_COLOR = "#2B8EE2"
 BUTTON_HOVER_FOREGROUND_COLOR = "#0E3D8B"
 
+# Status button background and & foregrounf color
 STATUS_FOREGROUND_COLOR = "#FFFFFE"
 STATUS_BACKGROUND_COLOR = "#001B2B"
 
+# Button active background & foreground color
 BUTTON_ACTIVE_BACKGROUND_COLOR = "#9400d3"
 BUTTON_ACTIVE_FOREGROUND_COLOR = BUTTON_FOREGROUND_COLOR
 
+# Button border width
 BUTTON_BORDER_WIDTH = 0
+
+# Global background & foreground color
+GLOBAL_BACKGROUND_COLOR = "#d7dade"
+GLOBAL_FOREGROUND_COLOR = "#4f5154"
+
+# Global Font familiy & size
+GLOBAL_FONT_FAMILY = "Open Sans"
+GLOBAL_FONT_SIZE = 10
+BOLD = 'bold'
+ITALIC = 'italic'
 
 """
 FOREGROUND -> #301869, #6326e2, 
@@ -56,12 +72,10 @@ class MusicPlayer:
         self.audioFileTitle = ""
 
         # Setting up Buttons
-        Load = Button(window, name='load', relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Load', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.load)
-        Pause = Button(window, name='pause', relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Pause/Play', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.pause)
-        Stop = Button(window, name='stop', relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Stop', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.stop)
-
-        # Quit Button
-        Quit = Button(window, name='quit', relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Quit', width=34, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=lambda:self.window.quit() if messagebox.askyesno("Quit to Windows", "Do you want to exit?") else "")
+        Load = Button(window, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Load', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.load)
+        Pause = Button(window, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Pause/Play', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.pause)
+        Stop = Button(window, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Stop', width=12, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=self.stop)
+        Quit = Button(window, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, activebackground=BUTTON_ACTIVE_BACKGROUND_COLOR, text='Quit', width=34, bg=BUTTON_BACKGROUND_COLOR, fg=BUTTON_FOREGROUND_COLOR, font=('Helvetica', 12, 'bold'), command=lambda:self.window.quit() if messagebox.askyesno("Quit to Windows", "Do you want to exit?") else "")
 
         # Event Bindings
         Load.bind('<Enter>',self.hoverL)
