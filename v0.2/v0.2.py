@@ -149,6 +149,7 @@ class MusicPlayer:
         # bindings and functions
         self.decideButtonState()
         self.playlist.bind("<Double-1>", self.play)
+        self.playlist.bind("<Delete>", self.removeItem)
 
         # Button hover bindings
         self.Load.bind('<Enter>',self.hoverL)
@@ -165,6 +166,44 @@ class MusicPlayer:
         self.Prev.bind('<Leave>', self.hoverPrev)
         self.Next.bind('<Enter>', self.hoverNext)
         self.Next.bind('<Leave>', self.hoverNext)
+
+    def removeItem(self, event=None):
+        # Get the current song tuple number
+        current = self.playlist.curselection() 
+        # Name of selected song in listbox
+        currentSelectedSong = self.playlist.get(current)
+        # Name with path of selected song in listbox
+        currentSelectedSong = os.path.join(self.songDict[currentSelectedSong], currentSelectedSong)
+
+        # print([i for i in self.playlist])
+
+        # If the current playing song is removed from the listbox
+        # we will play the next song
+        if self.musicFile == currentSelectedSong: 
+            self.switch_song(target='next')
+            current = self.playlist.curselection()
+
+        """
+            Following code is to remove the currently selected item
+            from the listbox
+        """
+        # Ending index of playlist
+        end = len(self.playlist.get(0, END)) - 1
+
+        # Add one to the current song number
+        prev_one = current[0] - 1
+
+        # If 'next_one' exceeds ENDing Index of Listbox
+        if prev_one > end:
+            prev_one = 0
+        # Or 'next_one' becomes less than zero
+        elif prev_one < 0:
+            prev_one = end
+
+        # Deleting the previous item
+        self.playlist.delete(prev_one)
+
+
 
 
     def hoverL(self, event):
@@ -310,7 +349,7 @@ class MusicPlayer:
         currentState = self.Loop['text'][5:]
         self.Loop.config(text='Loop (On)' if currentState=="(Off)" else 'Loop (Off)', bg=STATUS_BACKGROUND_COLOR if currentState=="(Off)" else BUTTON_BACKGROUND_COLOR, fg=STATUS_FOREGROUND_COLOR if currentState=="(On)" else BUTTON_FOREGROUND_COLOR)
 
-    def switch_song(self, target):
+    def switch_song(self, target=None, current=None):
         # Get the current song tuple number
         current = next_one = self.playlist.curselection()
 
