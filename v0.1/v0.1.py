@@ -7,7 +7,8 @@ import pygame
 from pygame import mixer
 from mutagen import mp3 as mp
 
-
+# Default Title
+TITLE = "Leaf Player (V.0.1)"
 
 BACKGROUND_COLOR = "#001B2B"
 
@@ -50,7 +51,7 @@ class MusicPlayer:
     def __init__(self, window):
         # Setting up the tkinter window
         window.geometry('420x120+150+150')
-        window.title('Leaf Player v.0.1')
+        window.title(TITLE)
         window.resizable(0, 0)
         window.config(bg=BACKGROUND_COLOR)
         self.window = window
