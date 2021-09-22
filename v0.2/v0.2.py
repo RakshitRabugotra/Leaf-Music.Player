@@ -10,7 +10,7 @@ from mutagen import mp3 as mp
 from mutagen import MutagenError
 
 
-BACKGROUND_COLOR = "#001B2B"
+BACKGROUND_COLOR = "#010" # "#001B2B"
 
 # Default Title
 TITLE = "Leaf Player (V.0.2)"
@@ -28,27 +28,27 @@ LABEL_BORDER_WIDTH = 2
 BUTTON_WIDTH = 25
 
 # Button background & foreground color
-BUTTON_BACKGROUND_COLOR = "#0E3D8B"
-BUTTON_FOREGROUND_COLOR = "#2B8EE2"
+BUTTON_BACKGROUND_COLOR = "#1E8EAB" # "#74655E" # "#0E3D8B"
+BUTTON_FOREGROUND_COLOR = "#FFF" # "#BDB19A" # #2B8EE2"
 
 # Button hover background & foreground color
-BUTTON_HOVER_BACKGROUND_COLOR = "#2B8EE2"
-BUTTON_HOVER_FOREGROUND_COLOR = "#0E3D8B"
+BUTTON_HOVER_BACKGROUND_COLOR = "#120460" # "#2B8EE2"
+BUTTON_HOVER_FOREGROUND_COLOR = "#1E8EAB" # "#0E3D8B"
 
 # Status button background and & foregrounf color
-STATUS_FOREGROUND_COLOR = "#FFFFFE"
-STATUS_BACKGROUND_COLOR = "#001B2B"
+STATUS_BACKGROUND_COLOR = "#120460" # "#563D39" # "#001B2B"
+STATUS_FOREGROUND_COLOR = "#FFF" # "#BDB19A" # "#FFFFFE"
 
 # Button active background & foreground color
 BUTTON_ACTIVE_BACKGROUND_COLOR = "#9400d3"
-BUTTON_ACTIVE_FOREGROUND_COLOR = BUTTON_FOREGROUND_COLOR
+BUTTON_ACTIVE_FOREGROUND_COLOR = BUTTON_BACKGROUND_COLOR
 
 # Button border width
 BUTTON_BORDER_WIDTH = 0
 
 # Global background & foreground color
-GLOBAL_BACKGROUND_COLOR = "#d7dade"
-GLOBAL_FOREGROUND_COLOR = "#4f5154"
+GLOBAL_BACKGROUND_COLOR = "#004696" # "#687E8D" # "#E3CAC3" # "#d7dade"
+GLOBAL_FOREGROUND_COLOR = "#FFF" # "#4f5154"
 
 # Global Font familiy & size
 GLOBAL_FONT_FAMILY = "Open Sans"
@@ -67,6 +67,7 @@ class MusicPlayer:
         window.geometry('600x300+150+150')
         window.title(TITLE)
         window.resizable(0, 0)
+        window.config(bg=BACKGROUND_COLOR)
         self.window = window
 
         # Dictionaries
@@ -90,7 +91,7 @@ class MusicPlayer:
         self.mp3 = None
 
         # Frames
-        controlFrame = LabelFrame(window, relief=GROOVE, bg=GLOBAL_FOREGROUND_COLOR, width=240, height=150)
+        controlFrame = LabelFrame(window, relief=GROOVE, bg=GLOBAL_BACKGROUND_COLOR, width=240, height=150)
 
         # Labels
         self.SongNameLabel = Label(window, relief=GROOVE, bd=LABEL_BORDER_WIDTH, text="", bg=STATUS_BACKGROUND_COLOR, fg=STATUS_FOREGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE))
@@ -123,32 +124,85 @@ class MusicPlayer:
         self.StatusLabel.pack(side=BOTTOM, fill=X)
 
         # Listbox widget
-        self.playlist = Listbox(window, bg=GLOBAL_BACKGROUND_COLOR, selectmode=SINGLE, highlightcolor='#3582e8')
+        self.playlist = Listbox(window, bg=GLOBAL_BACKGROUND_COLOR, fg=GLOBAL_FOREGROUND_COLOR, selectmode=SINGLE, highlightcolor='#3582e8', selectbackground=BUTTON_HOVER_BACKGROUND_COLOR)
         self.playlist.pack(side=LEFT, fill='both', expand='yes')
 
+        # Adding style to scroll and scale
+        style = ttk.Style()
+        style.configure('TScale', background=GLOBAL_BACKGROUND_COLOR)
+        style.configure('TScrollbar', background=GLOBAL_BACKGROUND_COLOR)
+
+        # Setting a Theme
+        style.theme_use()  # default, clam, alt, vista
+
         # ScrollBar for listbox
-        self.playlistScroll = Scrollbar(window, bg=GLOBAL_BACKGROUND_COLOR)
+        self.playlistScroll = ttk.Scrollbar(window)
         self.playlistScroll.pack(side=LEFT, fill='y', expand='no')
 
         # Configuring Scrollbar for listbox view
         self.playlist.config(yscrollcommand=self.playlistScroll.set)
         self.playlistScroll.config(command=self.playlist.yview)
 
-        # Adding style to listbox
-        style = ttk.Style()
-
-        # Setting a Theme
-        style.theme_use()  # default, clam, alt, vista
-
         # Scale Widget
         self.volumeLevel = ttk.Scale(window, from_=1.0, to_=0.0, orient=VERTICAL, command=self.changeVolume)
-        # self.volumeLevel.config(bg=GLOBAL_BACKGROUND_COLOR)
         self.volumeLevel.pack(side=LEFT, fill='y')
         self.volumeLevel.set(DEFAULT_VOLUME if 0.0 <= DEFAULT_VOLUME <= 1.0 else 0.5)
 
         # bindings and functions
         self.decideButtonState()
         self.playlist.bind("<Double-1>", self.play)
+
+        # Button hover bindings
+        self.Load.bind('<Enter>',self.hoverL)
+        self.Load.bind('<Leave>',self.hoverL)
+        self.Pause.bind('<Enter>',self.hoverP)
+        self.Pause.bind('<Leave>',self.hoverP)
+        self.Stop.bind('<Enter>',self.hoverS)
+        self.Stop.bind('<Leave>',self.hoverS)
+        self.Loop.bind('<Enter>',self.hoverLoop)
+        self.Loop.bind('<Leave>',self.hoverLoop)
+        self.Quit.bind('<Enter>', self.hoverQ)
+        self.Quit.bind('<Leave>', self.hoverQ)
+        self.Prev.bind('<Enter>', self.hoverPrev)
+        self.Prev.bind('<Leave>', self.hoverPrev)
+        self.Next.bind('<Enter>', self.hoverNext)
+        self.Next.bind('<Leave>', self.hoverNext)
+
+
+    def hoverL(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Load['state'] != "disabled": self.Load['bg'],  self.Load['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Load['bg'], self.Load['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+
+    def hoverP(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Pause['state'] != "disabled": self.Pause['bg'],  self.Pause['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Pause['bg'], self.Pause['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+
+    def hoverS(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Stop['state'] != "disabled": self.Stop['bg'],  self.Stop['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Stop['bg'], self.Stop['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+
+    def hoverLoop(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Loop['state'] != "disabled": self.Loop['bg'],  self.Loop['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Loop['bg'], self.Loop['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+
+    def hoverPrev(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Prev['state'] != "disabled": self.Prev['bg'],  self.Prev['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Prev['bg'], self.Prev['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+
+    def hoverNext(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Next['state'] != "disabled": self.Next['bg'],  self.Next['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Next['bg'], self.Next['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+
+    def hoverQ(self, event):
+        eventName = str(event)[1:].split(" ")[0]
+        if eventName == "Enter" and self.Quit['state'] != "disabled": self.Quit['bg'],  self.Quit['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: self.Quit['bg'], self.Quit['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
 
     def load(self):
         self.changeStatus(msg='Loading...', after=False)
