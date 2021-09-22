@@ -15,6 +15,12 @@ BACKGROUND_COLOR = "#001B2B"
 # Default Title
 TITLE = "Leaf Player (V.0.2)"
 
+# Default volume of player (Should be between [0.0, 1.0] else 0.5 is considered)
+DEFAULT_VOLUME = 0.8
+
+# Timer accuracy (in miliseconds) increasing will 
+TIME = 1000
+
 # Label border width
 LABEL_BORDER_WIDTH = 2
 
@@ -63,6 +69,9 @@ class MusicPlayer:
         window.resizable(0, 0)
         self.window = window
 
+        # Dictionaries
+        self.songDict = {}
+
         # Booleans
         self.musicFile = False
         self.playingState = False
@@ -92,8 +101,9 @@ class MusicPlayer:
         # Play options
         self.Pause = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Pause', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=('Open Sans', 10), command=self.pause)
         self.Stop = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Stop', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=self.stop)
+        self.Loop = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Loop (Off)', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=self.changeLoopState)
         # Quit
-        self.Quit = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Quit', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=lambda:window.quit() if messagebox.askyesno("Quit to Windows", "Do you want to exit?") else "")
+        self.Quit = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Quit', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=lambda:window.quit() if messagebox.askyesno("Quit to Windows", "Do you want to exit?") else None)
 
         # Switching songs - Next
         self.Next = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Next', width=BUTTON_WIDTH-15, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=lambda:self.switch_song(target='next'))
@@ -106,19 +116,35 @@ class MusicPlayer:
         self.Load.pack(padx=10, pady=5)
         self.Pause.pack(padx=10)
         self.Stop.pack(padx=10)
+        self.Loop.pack(padx=10)
         self.Quit.pack(padx=10, pady=55)
-        self.Prev.place(x=25, y=95)
-        self.Next.place(x=135, y=95)
+        self.Prev.place(x=25, y=115)
+        self.Next.place(x=135, y=115)
         self.StatusLabel.pack(side=BOTTOM, fill=X)
 
         # Listbox widget
         self.playlist = Listbox(window, bg=GLOBAL_BACKGROUND_COLOR, selectmode=SINGLE, highlightcolor='#3582e8')
         self.playlist.pack(side=LEFT, fill='both', expand='yes')
 
+        # ScrollBar for listbox
+        self.playlistScroll = Scrollbar(window, bg=GLOBAL_BACKGROUND_COLOR)
+        self.playlistScroll.pack(side=LEFT, fill='y', expand='no')
+
+        # Configuring Scrollbar for listbox view
+        self.playlist.config(yscrollcommand=self.playlistScroll.set)
+        self.playlistScroll.config(command=self.playlist.yview)
+
+        # Adding style to listbox
+        style = ttk.Style()
+
+        # Setting a Theme
+        style.theme_use()  # default, clam, alt, vista
+
         # Scale Widget
-        self.VolumeLevel = Scale(window, from_=1.0, to_=0.0, orient=VERTICAL, resolution=0.1)
-        self.VolumeLevel.config(bg=GLOBAL_BACKGROUND_COLOR)
-        self.VolumeLevel.pack(side=LEFT, fill='y')
+        self.volumeLevel = ttk.Scale(window, from_=1.0, to_=0.0, orient=VERTICAL, command=self.changeVolume)
+        # self.volumeLevel.config(bg=GLOBAL_BACKGROUND_COLOR)
+        self.volumeLevel.pack(side=LEFT, fill='y')
+        self.volumeLevel.set(DEFAULT_VOLUME if 0.0 <= DEFAULT_VOLUME <= 1.0 else 0.5)
 
         # bindings and functions
         self.decideButtonState()
@@ -128,10 +154,11 @@ class MusicPlayer:
         self.changeStatus(msg='Loading...', after=False)
         songList = filedialog.askopenfilenames(filetypes=[("Audio file (.MP3/ .OGG/ .WAV)", ".mp3 .ogg .wav"), ("All files", "*")])
 
-
-        # Iteratiing through Songlist`
+        # Iterating through Songlist`
         if songList:
-            self.musicDir = '/'.join(songList[0].split('/')[:-1])
+            # Grabbing the music directory for each item
+            self.songDict = dict((song.split('/')[-1], '/'.join(song.split('/')[:-1])) for song in songList)
+
             # Creating position varibale for inserting items in listbox
             pos = 0
             while pos < len(songList):
@@ -149,7 +176,7 @@ class MusicPlayer:
     def play(self, event=None):
         # Getting the active element in listbox
         self.musicFile = self.playlist.get(ACTIVE)
-        self.musicFile = os.path.join(self.musicDir, self.musicFile)
+        self.musicFile = os.path.join(self.songDict[self.musicFile], self.musicFile)
 
         # Getting the current selection in listbox  
         currSelection = self.playlist.curselection()
@@ -170,6 +197,8 @@ class MusicPlayer:
                 mixer.init(frequency=mp3.info.sample_rate)  
                 # Loading the file into mixer
                 mixer.music.load(self.musicFile)
+                # Setting up volume of mixer
+                mixer.music.set_volume(self.volumeLevel.get())
                 # Play the file
                 mixer.music.play()
                 # Changing the status to playing song
@@ -220,9 +249,14 @@ class MusicPlayer:
             # Changing the status to Stopped
             self.changeStatus(msg="00:00:00/"+self.totalTime+" (Music Stopped)", after=False)
 
+    def changeLoopState(self):
+        # Change the text on loop button
+        currentState = self.Loop['text'][5:]
+        self.Loop.config(text='Loop (On)' if currentState=="(Off)" else 'Loop (Off)')
+
     def switch_song(self, target):
         # Get the current song tuple number
-        next_one = self.playlist.curselection()
+        current = next_one = self.playlist.curselection()
 
         # Ending index of playlist
         end = len(self.playlist.get(0, END)) - 1
@@ -240,17 +274,23 @@ class MusicPlayer:
         elif next_one < 0:
             next_one = end
 
-        # Clear active selection
-        self.playlist.selection_clear(0, END)
+        # If the next song is same as previous one... stop
+        if current[0] == next_one and self.Loop['text'] == 'Loop (Off)': self.stop()
+        else:
+            # Clear active selection
+            self.playlist.selection_clear(0, END)
 
-        # Activate next song
-        self.playlist.activate(next_one)
+            # Set the view to next playing song
+            self.playlist.see(next_one)
 
-        # Set Active Bat to Next Song
-        self.playlist.selection_set(next_one, last=None)
+            # Activate next song
+            self.playlist.activate(next_one)
 
-        # Play the active element in listbox
-        self.play()
+            # Set Active Bat to Next Song
+            self.playlist.selection_set(next_one, last=None)
+
+            # Play the active element in listbox
+            self.play()
 
 
     def timeElapsed(self):
@@ -267,7 +307,8 @@ class MusicPlayer:
 
             if self.playingState:
                 # Increase current time by 1 second
-                currentTime += 1
+                # currentTime += 1
+                pass
             else:
                 self.changeStatus(msg=duration+" (Music Paused)", after=False)
             self.window.after(1000, self.timeElapsed)
@@ -275,6 +316,11 @@ class MusicPlayer:
             # Audio File has ended successfully
             # Play the next file
             self.switch_song(target='next')
+
+    def changeVolume(self, event=None):
+        currVolume = self.volumeLevel.get()
+        try: mixer.music.set_volume(currVolume)
+        except pygame.error as e: None if str(e) == "mixer not initialized" else print(e)
 
 
     def changeStatus(self, _type=None, msg=None, after=True, after_text=None):
