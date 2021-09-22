@@ -184,8 +184,12 @@ class MusicPlayer:
 
     def hoverLoop(self, event):
         eventName = str(event)[1:].split(" ")[0]
-        if eventName == "Enter" and self.Loop['state'] != "disabled": self.Loop['bg'],  self.Loop['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
-        else: self.Loop['bg'], self.Loop['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
+        if eventName == "Enter" and self.Loop['state'] != "disabled": 
+            if self.Loop['text'] == "Loop (On)": self.Loop['bg'],  self.Loop['fg'] = STATUS_BACKGROUND_COLOR, STATUS_FOREGROUND_COLOR
+            else: self.Loop['bg'],  self.Loop['fg'] = BUTTON_HOVER_BACKGROUND_COLOR, BUTTON_HOVER_FOREGROUND_COLOR 
+        else: 
+            if self.Loop['text'] == "Loop (On)": self.Loop['bg'],  self.Loop['fg'] = STATUS_BACKGROUND_COLOR, STATUS_FOREGROUND_COLOR
+            else: self.Loop['bg'], self.Loop['fg'] = BUTTON_BACKGROUND_COLOR, BUTTON_FOREGROUND_COLOR
 
     def hoverPrev(self, event):
         eventName = str(event)[1:].split(" ")[0]
@@ -304,7 +308,7 @@ class MusicPlayer:
     def changeLoopState(self):
         # Change the text on loop button
         currentState = self.Loop['text'][5:]
-        self.Loop.config(text='Loop (On)' if currentState=="(Off)" else 'Loop (Off)')
+        self.Loop.config(text='Loop (On)' if currentState=="(Off)" else 'Loop (Off)', bg=STATUS_BACKGROUND_COLOR if currentState=="(Off)" else BUTTON_BACKGROUND_COLOR, fg=STATUS_FOREGROUND_COLOR if currentState=="(On)" else BUTTON_FOREGROUND_COLOR)
 
     def switch_song(self, target):
         # Get the current song tuple number
@@ -314,17 +318,20 @@ class MusicPlayer:
         end = len(self.playlist.get(0, END)) - 1
 
         # Add one to the current song number
-        if target == 'next':
-            next_one = next_one[0] + 1
+        if self.Loop['text'] == "Loop (On)":
+            pass
         else:
-            next_one = next_one[0] - 1
+            if target == 'next':
+                next_one = next_one[0] + 1
+            else:
+                next_one = next_one[0] - 1
 
-        # If 'next_one' exceeds ENDing Index of Listbox
-        if next_one > end:
-            next_one = 0
-        # Or 'next_one' becomes less than zero
-        elif next_one < 0:
-            next_one = end
+            # If 'next_one' exceeds ENDing Index of Listbox
+            if next_one > end:
+                next_one = 0
+            # Or 'next_one' becomes less than zero
+            elif next_one < 0:
+                next_one = end
 
         # If the next song is same as previous one... stop
         if current[0] == next_one and self.Loop['text'] == 'Loop (Off)': self.stop()
