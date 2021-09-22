@@ -175,8 +175,6 @@ class MusicPlayer:
         # Name with path of selected song in listbox
         currentSelectedSong = os.path.join(self.songDict[currentSelectedSong], currentSelectedSong)
 
-        # print([i for i in self.playlist])
-
         # If the current playing song is removed from the listbox
         # we will play the next song
         if self.musicFile == currentSelectedSong: 
@@ -202,9 +200,6 @@ class MusicPlayer:
 
         # Deleting the previous item
         self.playlist.delete(prev_one)
-
-
-
 
     def hoverL(self, event):
         eventName = str(event)[1:].split(" ")[0]
@@ -390,7 +385,6 @@ class MusicPlayer:
             # Play the active element in listbox
             self.play()
 
-
     def timeElapsed(self):
         if mixer.music.get_pos() != -1:
             # Fetching time elapsed playing the audio file
@@ -419,7 +413,6 @@ class MusicPlayer:
         currVolume = self.volumeLevel.get()
         try: mixer.music.set_volume(currVolume)
         except pygame.error as e: None if str(e) == "mixer not initialized" else print(e)
-
 
     def changeStatus(self, _type=None, msg=None, after=True, after_text=None):
         if msg is None: msg = self.defaultStatus
