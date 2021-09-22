@@ -51,16 +51,14 @@ GLOBAL_BACKGROUND_COLOR = "#004696" # "#687E8D" # "#E3CAC3" # "#d7dade"
 GLOBAL_FOREGROUND_COLOR = "#FFF" # "#4f5154"
 
 # Global Font familiy & size
-GLOBAL_FONT_FAMILY = "Open Sans"
+GLOBAL_FONT_FAMILY = "Helvetica" # "Open Sans"
 GLOBAL_FONT_SIZE = 10
-BOLD = 'bold'
-ITALIC = 'italic'
+# Presets
+FONT_BOLD = (GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE, 'bold')
+FONT_ITALIC = (GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE, 'italic')
+FONT = (GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE)
 
-"""
-FOREGROUND -> #301869, #6326e2, 
-BACKGROUND -> #134b72, #848c8c, #4a62d9, #001B2B
-"""
-
+# Main music player class
 class MusicPlayer:
     def __init__(self, window):
         # Setting up tkinter window
@@ -94,22 +92,22 @@ class MusicPlayer:
         controlFrame = LabelFrame(window, relief=GROOVE, bg=GLOBAL_BACKGROUND_COLOR, width=240, height=150)
 
         # Labels
-        self.SongNameLabel = Label(window, relief=GROOVE, bd=LABEL_BORDER_WIDTH, text="", bg=STATUS_BACKGROUND_COLOR, fg=STATUS_FOREGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE))
-        self.StatusLabel = Label(controlFrame, relief=SUNKEN, bd=LABEL_BORDER_WIDTH, text=self.defaultStatus, width=30, bg=STATUS_BACKGROUND_COLOR, fg=STATUS_FOREGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), anchor=W)
+        self.SongNameLabel = Label(window, relief=GROOVE, bd=LABEL_BORDER_WIDTH, text="", bg=STATUS_BACKGROUND_COLOR, fg=STATUS_FOREGROUND_COLOR, font=FONT_BOLD)
+        self.StatusLabel = Label(controlFrame, relief=SUNKEN, bd=LABEL_BORDER_WIDTH, text=self.defaultStatus, width=30, bg=STATUS_BACKGROUND_COLOR, fg=STATUS_FOREGROUND_COLOR, font=FONT_ITALIC, anchor=W)
 
         # Load
-        self.Load = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Load', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=self.load)
+        self.Load = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Load', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=FONT_BOLD, command=self.load)
         # Play options
         self.Pause = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Pause', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=('Open Sans', 10), command=self.pause)
-        self.Stop = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Stop', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=self.stop)
-        self.Loop = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Loop (Off)', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=self.changeLoopState)
+        self.Stop = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Stop', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=FONT_BOLD, command=self.stop)
+        self.Loop = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Loop (Off)', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=FONT_BOLD, command=self.changeLoopState)
         # Quit
-        self.Quit = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Quit', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=lambda:window.quit() if messagebox.askyesno("Quit to Windows", "Do you want to exit?") else None)
+        self.Quit = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Quit', width=BUTTON_WIDTH, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=FONT_BOLD, command=lambda:window.quit() if messagebox.askyesno("Quit to Windows", "Do you want to exit?") else None)
 
         # Switching songs - Next
-        self.Next = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Next', width=BUTTON_WIDTH-15, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=lambda:self.switch_song(target='next'))
+        self.Next = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Next', width=BUTTON_WIDTH-15, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=FONT_BOLD, command=lambda:self.switch_song(target='next'))
         # Switching songs - Previous
-        self.Prev = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Previous', width=BUTTON_WIDTH-15, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=(GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE), command=lambda:self.switch_song(target='prev'))
+        self.Prev = Button(controlFrame, relief=GROOVE, borderwidth=BUTTON_BORDER_WIDTH, text='Previous', width=BUTTON_WIDTH-15, fg=BUTTON_FOREGROUND_COLOR, bg=BUTTON_BACKGROUND_COLOR, font=FONT_BOLD, command=lambda:self.switch_song(target='prev'))
 
         # Packing Widgets on screen
         self.SongNameLabel.pack(fill=X, pady=2, side=TOP)
