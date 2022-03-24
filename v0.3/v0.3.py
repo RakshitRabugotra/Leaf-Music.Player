@@ -7,95 +7,171 @@ from pygame import mixer
 from mutagen.mp3 import MP3
 from mutagen import MutagenError
 
-DIR = "pngs\\16"
-INITIAL_DIR = ""  # r"E:\Songs"
-FONT = ('Open Sans', 12)
-RESIZABLE = True  # True if you want the window to be resizable
-RESOLUTION = "960x540"
-MEDIA_CONTROL_COLOR = '#fff'  # Color of Media
-VIDEO_FRAME_COLOR = '#000'  # Color of Video
-HIGHLIGHT_COLOR = 'green'
-STRIPED_COLOR = '#8dd0d9'
-PLAYLIST_ROW_HEIGHT = 20  # Row Height in Playlist Treeview
-
 global count
 count = 0
 
-
 class MusicPlayer:
     def __init__(self, master):
-        self.playingState = 'stopped'  # ['playing', 'paused', 'stopped']
+        """
+        CONSTANTS
+        """
+        BACKGROUND_COLOR = "#010" # "#001B2B"
 
-        # Various Variables
-        self.musicDir = ""              # For acquiring the parent directory
-        self.musicFile = ""             # For getting name/full_name of song
-        self.SongDict = dict()          # For storing the directory for every file
-        self.file_open_bool = False     # Used for conditional operations
-        self.old_song_name = ''         # Used for conditional operations
-        self.DirList = list()           # Used to iterate through
-        self.indexDict = dict()         #
+        # Default Title
+        TITLE = "Leaf Player (V.0.3)"
+        # Whether window will be resizable or not
+        self.RESIZABLE = True 
+
+        DIR = "pngs\\16"
+        RESOLUTION = "960x540"
+
+        # System Colors
+        MEDIA_CONTROL_COLOR = '#fff'  # Color of Media
+        VIDEO_FRAME_COLOR = '#000'  # Color of Video
+        HIGHLIGHT_COLOR = 'green'
+        STRIPED_COLOR = '#8dd0d9'
+
+        # Row height in playlist treeview
+        PLAYLIST_ROW_HEIGHT = 20
+
+        # Default volume of player (Should be between [0.0, 1.0] else 0.5 is considered)
+        DEFAULT_VOLUME = 0.8
+
+        # Timer accuracy (in miliseconds) increasing will 
+        TIME = 1000
+
+        # Label border width
+        LABEL_BORDER_WIDTH = 2
+
+        # Button width
+        BUTTON_WIDTH = 25
+
+        # Button background & foreground color
+        BUTTON_BACKGROUND_COLOR = "#0E3D8B" # "#1E8EAB" # "#74655E" # "#0E3D8B"
+        BUTTON_FOREGROUND_COLOR = "#2B8EE2" # "#FFF" # "#BDB19A" # #2B8EE2"
+
+        # Button hover background & foreground color
+        BUTTON_HOVER_BACKGROUND_COLOR = BUTTON_FOREGROUND_COLOR # "#120460" # "#2B8EE2"
+        BUTTON_HOVER_FOREGROUND_COLOR = BUTTON_BACKGROUND_COLOR # "#1E8EAB" # "#0E3D8B"
+
+        # Status button background and & foregrounf color
+        STATUS_BACKGROUND_COLOR = "#120460" # "#563D39" # "#001B2B"
+        STATUS_FOREGROUND_COLOR = "#FFF" # "#BDB19A" # "#FFFFFE"
+
+        # Button active background & foreground color
+        BUTTON_ACTIVE_BACKGROUND_COLOR = "#9400d3"
+        BUTTON_ACTIVE_FOREGROUND_COLOR = BUTTON_BACKGROUND_COLOR
+
+        # Button border width
+        BUTTON_BORDER_WIDTH = 0
+
+        # Global background & foreground color
+        GLOBAL_BACKGROUND_COLOR = "#001B2B" # "#004696" # "#687E8D" # "#E3CAC3" # "#d7dade"
+        GLOBAL_FOREGROUND_COLOR = "#FFF" # "#4f5154"
+
+        # Global Font familiy & size
+        GLOBAL_FONT_FAMILY = "Helvetica" # "Open Sans"
+        GLOBAL_FONT_SIZE = 10
+        # Presets
+        FONT_BOLD = (GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE, 'bold')
+        FONT_ITALIC = (GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE, 'italic')
+        FONT = (GLOBAL_FONT_FAMILY, GLOBAL_FONT_SIZE)
+
+        # Icons for buttons
+        PLAY_ICO = PhotoImage(file=DIR + '\\play.png')
+        PAUSE_ICO = PhotoImage(file=DIR + '\\pause.png')
+        NEXT_ICO = PhotoImage(file=DIR + '\\next.png')
+        PREV_ICO = PhotoImage(file=DIR + '\\prev.png')
+        LOOP_OFF_ICO = PhotoImage(file=DIR + '\\colored\\loop-off.png')
+        LOOP_ON_ICO = PhotoImage(file=DIR + '\\colored\\loop-on.png')
+        STOP_ICO = PhotoImage(file=DIR + '\\stop.png')
+
+        # Setting up tkinter window
+        master.geometry(f'{RESOLUTION}+150+150')
+        master.title(TITLE)
+        master.resizable(0, 0)
+        master.config(bg=BACKGROUND_COLOR)
+        self.master = master
+
+        if self.RESIZABLE:
+            master.resizable(1, 1)
+        else:
+            master.resizable(0, 0)
+
+        # Dictionaries
+        self.songDict = {}
+
+        # Booleans
+        self.musicFile = False
+        self.playingState = False
+
+        # Integers
+        self.audioLength = 0
+
+        # Strings
+        self.musicDir = ""
+        self.defaultStatus = "Load a file to play!"
+        self.playingTime = "--:--:--"
+        self.totalTime = "--:--:--"
+        self.audioFileTitle = ""
+
+        # MP3 and mixer obejcts
+        self.mp3 = None
+
+        # Useless for now variables
         self.loop = False               # To toggle loop on/off
         self.selected = []
         self.duration = 0
 
-        # Icons for Buttons
-        self.play_ico = PhotoImage(file=DIR + r'\play.png')
-        self.pause_ico = PhotoImage(file=DIR + r'\pause.png')
-        self.next_ico = PhotoImage(file=DIR + r'\next.png')
-        self.prev_ico = PhotoImage(file=DIR + r'\prev.png')
-        self.loop_off_ico = PhotoImage(file=DIR + r'\colored\loop-off.png')
-        self.loop_on_ico = PhotoImage(file=DIR + r'\colored\loop-on.png')
-        self.stop_ico = PhotoImage(file=DIR + r'\stop.png')
 
         # Tool Bar Menu
-        tool_menu = Menu(master)
-        master.config(menu=tool_menu)
+        toolMenu = Menu(master)
+        master.config(menu=toolMenu)
 
-        file_menu = Menu(tool_menu)
-        tool_menu.add_cascade(label="File", menu=file_menu)
+        fileMenu = Menu(toolMenu)
+        toolMenu.add_cascade(label="File", menu=fileMenu)
 
-        file_menu.add_command(label="Open...", command=lambda: self.open_file(multiple=False))
-        file_menu.add_command(label="Open files...", command=lambda: self.open_file(multiple=True))
-        file_menu.add_command(label="Open Folder...", command=self.open_folder)
-        file_menu.add_separator()
-        file_menu.add_command(label="Clear Playlist", command=self.clear_playlist)
-        file_menu.add_command(label="Exit", command=master.quit)
-        # Drop Down Menu Ends
+        fileMenu.add_command(label="Open...", command=lambda: self.open_file(multiple=False))
+        fileMenu.add_command(label="Open files...", command=lambda: self.open_file(multiple=True))
+        fileMenu.add_command(label="Open Folder...", command=self.openFolder)
+        fileMenu.add_separator()
+        fileMenu.add_command(label="Clear Playlist", command=self.clearPlaylist)
+        fileMenu.add_command(label="Exit", command=master.quit)
 
         # Main Windows Configuration with Frames
 
         # Video and Playlist Frame
-        video_playlist_frame = Frame(master)
-        video_playlist_frame.pack(side=LEFT, fill=BOTH, expand='yes')
+        videoPlaylistFrame = Frame(master)
+        videoPlaylistFrame.pack(side=LEFT, fill=BOTH, expand='yes')
 
         # Video Frame
-        video_frame = Frame(video_playlist_frame)
-        video_frame.config(width=720, height=540, bg=VIDEO_FRAME_COLOR)
-        video_frame.pack(side=TOP, fill=BOTH, expand='yes')
+        videoFrame = Frame(videoPlaylistFrame)
+        videoFrame.config(width=720, height=540, bg=VIDEO_FRAME_COLOR)
+        videoFrame.pack(side=TOP, fill=BOTH, expand='yes')
 
         # Playlist Frame
-        playlist_frame = Frame(master)
-        playlist_frame.pack(side=LEFT, fill='both')
+        playlistFrame = Frame(master)
+        playlistFrame.pack(side=LEFT, fill='both')
 
         # Bottom Frame
-        bottom_frame = Frame(master)
-        bottom_frame.pack(side=LEFT)
+        bottomFrame = Frame(master)
+        bottomFrame.pack(side=LEFT)
 
         # Media control Frame
-        media_control_frame = Frame(video_frame, bg=MEDIA_CONTROL_COLOR)
-        media_control_frame.pack(side=BOTTOM, fill=X)
+        mediaControlFrame = Frame(videoFrame, bg=MEDIA_CONTROL_COLOR)
+        mediaControlFrame.pack(side=BOTTOM, fill=X)
 
         # Button Frame
-        button_frame = Frame(media_control_frame, bg='#fff')
-        button_frame.pack(side=LEFT, padx=1, pady=1, fill=X)
+        buttonFrame = Frame(mediaControlFrame, bg='#fff')
+        buttonFrame.pack(side=LEFT, padx=1, pady=1, fill=X)
         # Initialization of Frames Ends
 
         # ScrollBar for Listbox
-        y_scroll = ttk.Scrollbar(playlist_frame, orient=VERTICAL)
-        y_scroll.pack(side=RIGHT, fill=Y)
+        yScroll = ttk.Scrollbar(playlistFrame, orient=VERTICAL)
+        yScroll.pack(side=RIGHT, fill=Y)
 
-        x_scroll = ttk.Scrollbar(playlist_frame, orient=HORIZONTAL)
-        x_scroll.pack(side=BOTTOM, fill=X)
+        xScroll = ttk.Scrollbar(playlistFrame, orient=HORIZONTAL)
+        xScroll.pack(side=BOTTOM, fill=X)
 
         # Adding style to listbox
         style = ttk.Style()
@@ -104,7 +180,7 @@ class MusicPlayer:
         style.theme_use()  # default, clam, alt, vista
 
         # Listbox for playlist
-        self.playlist = Listbox(playlist_frame, yscrollcommand=y_scroll, xscrollcommand=x_scroll, selectmode=BROWSE,
+        self.playlist = Listbox(playlistFrame, yscrollcommand=yScroll, xscrollcommand=xScroll, selectmode=BROWSE,
                                 width=40, bg='#D3D3D3', fg='#405246', selectbackground='green')
         self.playlist.pack(fill=Y, expand=YES)
 
@@ -112,44 +188,40 @@ class MusicPlayer:
         self.playlist.bind('<Double-1>', self.instant_play)
 
         # Configuring ScrollBar for listbox
-        y_scroll.config(command=self.playlist.yview)
-        x_scroll.config(command=self.playlist.xview)
+        yScroll.config(command=self.playlist.yview)
+        xScroll.config(command=self.playlist.xview)
 
         # Media control Buttons
-        self.play_btn = Button(button_frame, bg=MEDIA_CONTROL_COLOR, image=self.play_ico, width=18, height=18,
+        self.playBTN = Button(buttonFrame, bg=MEDIA_CONTROL_COLOR, image=PLAY_ICO, width=18, height=18,
                                relief=RAISED, borderwidth=0, command=self.change_N_play)
-        self.prev_btn = Button(button_frame, bg=MEDIA_CONTROL_COLOR, image=self.prev_ico, width=18, height=18,
+        self.prevBTN = Button(buttonFrame, bg=MEDIA_CONTROL_COLOR, image=PREV_ICO, width=18, height=18,
                                relief=RAISED, borderwidth=0, command=lambda: self.switch_song(target='prev'))
-        self.next_btn = Button(button_frame, bg=MEDIA_CONTROL_COLOR, image=self.next_ico, width=18, height=18,
+        self.nextBTN = Button(buttonFrame, bg=MEDIA_CONTROL_COLOR, image=NEXT_ICO, width=18, height=18,
                                relief=RAISED, borderwidth=0, command=lambda: self.switch_song(target='next'))
-        self.loop_btn = Button(button_frame, bg=MEDIA_CONTROL_COLOR, image=self.loop_off_ico, width=18, height=18,
+        self.loopBTN = Button(buttonFrame, bg=MEDIA_CONTROL_COLOR, image=LOOP_OFF_ICO, width=18, height=18,
                                relief=RAISED, borderwidth=0, command=self.loop_song)
-        self.stop_btn = Button(button_frame, bg=MEDIA_CONTROL_COLOR, image=self.stop_ico, width=18, height=18,
+        self.stopBTN = Button(buttonFrame, bg=MEDIA_CONTROL_COLOR, image=STOP_ICO, width=18, height=18,
                                relief=RAISED, borderwidth=0, command=self.stop)
 
-        self.play_btn.image = self.play_ico
-        self.loop_btn.image = self.loop_off_ico
+        self.playBTN.image = PLAY_ICO
+        self.loopBTN.image = LOOP_OFF_ICO
 
-        self.prev_btn.pack(side=LEFT)
-        self.play_btn.pack(side=LEFT)
-        self.next_btn.pack(side=LEFT)
-        self.loop_btn.pack(side=LEFT, padx=5)
-        self.stop_btn.pack(side=LEFT)
+        self.prevBTN.pack(side=LEFT)
+        self.playBTN.pack(side=LEFT)
+        self.nextBTN.pack(side=LEFT)
+        self.loopBTN.pack(side=LEFT, padx=5)
+        self.stopBTN.pack(side=LEFT)
 
         # Duration Widgets
-        self.elapsedTime = Label(button_frame, text='--:--:--', bd=0, relief=GROOVE, bg='#fff', fg='#000')
+        self.elapsedTime = Label(buttonFrame, text='--:--:--', bd=0, relief=GROOVE, bg='#fff', fg='#000')
         self.elapsedTime.pack(side=LEFT, padx=1, anchor=E, ipadx=10)
 
         # Duration Slider
-        self.duration_slider = ttk.Scale(button_frame, from_=0, to=f'{int(self.duration)}', orient=HORIZONTAL, value=0, command=self.slide, length=400)
+        self.duration_slider = ttk.Scale(buttonFrame, from_=0, to=f'{int(self.duration)}', orient=HORIZONTAL, value=0, command=self.slide, length=400)
         self.duration_slider.pack(side=LEFT, padx=3, ipadx=10)
 
-        # # Temp Label
-        # self.slider_label = Label(button_frame, text='', bg='#fff')
-        # self.slider_label.pack()
-
         # Total length of Song
-        self.totalTime = Label(button_frame, text='--:--:--', bd=0, relief=GROOVE, bg='#fff', fg='#000')
+        self.totalTime = Label(buttonFrame, text='--:--:--', bd=0, relief=GROOVE, bg='#fff', fg='#000')
         self.totalTime.pack(side=LEFT, padx=1, anchor=W)
 
         # Duration Widgets Ends
@@ -160,9 +232,6 @@ class MusicPlayer:
         # Grab Elapsed Time
         # mixer.music.load(file)
         current_time = mixer.music.get_pos() // 1000
-
-        # Throw up temp Label to get Data
-        # self.slider_label.config(text=f'Slider: {int(self.duration_slider.get())} and Song Pos: {int(current_time)}')
 
         # Get currently playing song
         curr_file = self.playlist.curselection()
@@ -246,7 +315,7 @@ class MusicPlayer:
 
             if self.playingState == 'playing':
                 mixer.music.stop()
-                self.play_btn.image = self.play_ico
+                self.playBTN.image = PLAY_ICO
                 self.playingState = 'stopped'
 
             for item in self.musicDir:
@@ -273,13 +342,13 @@ class MusicPlayer:
 
         self.old_song_name = self.playlist.get(ACTIVE)
 
-        if self.play_btn.image == self.play_ico:
+        if self.playBTN.image == PLAY_ICO:
             # start playing
             self.play()
-            self.play_btn.config(image=self.pause_ico)
-            self.play_btn.image = self.pause_ico
+            self.playBTN.config(image=PAUSE_ICO)
+            self.playBTN.image = PAUSE_ICO
 
-    def open_folder(self):
+    def openFolder(self):
         self.musicDir = filedialog.askdirectory()
         try:
             self.DirList = os.listdir(self.musicDir)
@@ -331,7 +400,7 @@ class MusicPlayer:
                 # Get the current position
                 self.play_time()
 
-            elif self.playingState == 'new' and self.play_btn.image == self.play_ico:
+            elif self.playingState == 'new' and self.playBTN.image == PLAY_ICO:
                 self.musicFile = self.SongDict[self.playlist.get(ACTIVE)] + '/' + self.playlist.get(ACTIVE)
                 mixer.music.load(self.musicFile)
                 mixer.music.play()
@@ -379,8 +448,8 @@ class MusicPlayer:
         print(f'Playing: {file_name}\nFrom: {self.SongDict[file_name]}')
         self.file_open_bool = False
 
-        self.play_btn.config(image=self.play_ico)
-        self.play_btn.image = self.play_ico
+        self.playBTN.config(image=PLAY_ICO)
+        self.playBTN.image = PLAY_ICO
 
     def stop(self):
         self.playingState = 'stopped'
@@ -419,9 +488,9 @@ class MusicPlayer:
         mixer.music.play()
         self.playingState = 'playing'
 
-        if self.play_btn.image != self.play_ico:
-            self.play_btn.config(image=self.pause_ico)
-            self.play_btn.image = self.pause_ico
+        if self.playBTN.image != PLAY_ICO:
+            self.playBTN.config(image=PAUSE_ICO)
+            self.playBTN.image = PAUSE_ICO
 
         # Get the current position
         self.play_time()
@@ -462,33 +531,33 @@ class MusicPlayer:
         self.totalTime.config(text=total_length)
 
     def change_N_play(self):
-        if self.play_btn.image == self.play_ico:
+        if self.playBTN.image == PLAY_ICO:
             # start playing
             self.play()
-            self.play_btn.config(image=self.pause_ico)
-            self.play_btn.image = self.pause_ico
+            self.playBTN.config(image=PAUSE_ICO)
+            self.playBTN.image = PAUSE_ICO
         else:
             self.pause()
-            self.play_btn.config(image=self.play_ico)
-            self.play_btn.image = self.play_ico
+            self.playBTN.config(image=PLAY_ICO)
+            self.playBTN.image = PLAY_ICO
 
     def loop_song(self):
-        if self.loop_btn.image == self.loop_on_ico:
+        if self.loopBTN.image == LOOP_ON_ICO:
             self.loop = False
-            self.loop_btn.config(relief=RAISED)
-            self.loop_btn.config(image=self.loop_off_ico)
-            self.loop_btn.image = self.loop_off_ico
+            self.loopBTN.config(relief=RAISED)
+            self.loopBTN.config(image=LOOP_OFF_ICO)
+            self.loopBTN.image = LOOP_OFF_ICO
         else:
             self.loop = True
-            self.loop_btn.config(relief=SUNKEN)
-            self.loop_btn.config(image=self.loop_on_ico)
-            self.loop_btn.image = self.loop_on_ico
+            self.loopBTN.config(relief=SUNKEN)
+            self.loopBTN.config(image=LOOP_ON_ICO)
+            self.loopBTN.image = LOOP_ON_ICO
 
     def delete_song(self):
         # Change the icon of Play Button
-        if self.play_btn.image == self.play_ico:
-            self.play_btn.config(image=self.pause_ico)
-            self.play_btn.image = self.pause_ico
+        if self.playBTN.image == PLAY_ICO:
+            self.playBTN.config(image=PAUSE_ICO)
+            self.playBTN.image = PAUSE_ICO
 
         self.playlist.delete(ANCHOR)
         # Stop music if it's playing
@@ -496,7 +565,7 @@ class MusicPlayer:
             self.playingState = 'stopped'
             mixer.music.stop()
 
-    def clear_playlist(self):
+    def clearPlaylist(self):
         # Change the icon of Play Button
 
         self.playlist.delete(0, END)
@@ -505,21 +574,13 @@ class MusicPlayer:
             self.playingState = 'stopped'
             mixer.music.stop()
 
-        if self.play_btn.image == self.play_ico:
-            self.play_btn.config(image=self.pause_ico)
-            self.play_btn.image = self.pause_ico
+        if self.playBTN.image == PLAY_ICO:
+            self.playBTN.config(image=PAUSE_ICO)
+            self.playBTN.image = PAUSE_ICO
 
 
 # Configurations and Initialization
 app = Tk()
-app.title('Leaf Player')
-app.geometry(RESOLUTION)
-
-if RESIZABLE:
-    app.resizable(1, 1)
-else:
-    app.resizable(0, 0)
-
 player = MusicPlayer(app)
 
 # Mainloop initialization
